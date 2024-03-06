@@ -26,7 +26,7 @@ const SearchRoom = async (req, res) => {
   if(Rooms)
   {
   try {
-    const searchResult = await Room.find( { name:{$regex:'.*'+Rooms+'.*'},isPublic:true} );  // this is LIKE command in SQL
+    const searchResult = await Room.find( { name:{$regex:'.*'+Rooms+'.*'},isPublic:true} );
     if (searchResult) {
       res.status(200).json(searchResult);
     } else {
@@ -55,7 +55,7 @@ else
 
 const DeleteExpiredRooms=async()=>{
   const currentTime = Date.now();
-console.log('Current time:', new Date(currentTime).toISOString());  // toISOString() Function converts Date into String
+console.log('Current time:', new Date(currentTime).toISOString());
 
 const oneHourAgo = new Date(currentTime - 1000 * 60 * 60);
 console.log('One hour ago:', oneHourAgo.toISOString());
@@ -69,5 +69,23 @@ console.log('One hour ago:', oneHourAgo.toISOString());
     console.log(error);
    }
 }
+const SearchRoomByID=async(req,res)=>{
+  const roomID=String(req.query.RoomID.id);
+  roomID.String
+   try{
+    const response=await Room.findOne({_id:roomID}); 
+    if(response)
+    {
+      res.status(200).json(response);
+    }
+    else{
+      res.status(404).json({error:"No Room found."});
+    }
+   }
+   catch(err)
+   {
+      res.status(404).json({error:"Error Finding Room"}); 
+   }
+}
 
-module.exports = { createRoom,SearchRoom,DeleteExpiredRooms };
+module.exports = { createRoom,SearchRoom,DeleteExpiredRooms,SearchRoomByID };
