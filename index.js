@@ -9,6 +9,7 @@ const mongoose = require("mongoose");
 const auth = require("./routes/auth");
 const rooms = require("./routes/rooms");
 const cors = require("cors");
+const nodemailer = require("nodemailer");
 require("dotenv").config();
 // app.use(bodyParser.json());
 app.use(cors()); // This allows all origin
@@ -60,13 +61,6 @@ app.post("/create-payment-intent", async (req, res) => {
     clientSecret: paymentIntent.client_secret,
   });
 });
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-//Emailing Section
-
-
-
-
-//---------------------------------------------------------------------------------
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
