@@ -73,7 +73,9 @@ const JoinRoom = async (req, res) => {
 
   try {
     const response = await Room.findOne({ members: user });
+    const checkBan=await Room.findOne({_id:roomID,bannedUsers:user});
     var response1, response2, response3;
+    if(!checkBan){
     if (!response) {
       response2 = await Room.updateOne(
         { _id: roomID },
@@ -84,11 +86,13 @@ const JoinRoom = async (req, res) => {
         { $inc: { noOfMembers: 1 } }
       );
     }
+
     response1 = await Room.findOne({ _id: roomID }).populate(
       "members",
       "_id email"
     );
-    if (response1) {
+    }
+    if (response1&&!checkBan) {
       res.status(200).json(response1);
     } else {
       res.status(404).json({ error: "No Room found." });
@@ -98,6 +102,25 @@ const JoinRoom = async (req, res) => {
     res.status(500).json({ error: "Error Finding Room" });
   }
 };
+const BanUser=async(req,res)=>{
+  const roomID = String(req.query.RoomID.id);
+  const userID = String(req.query.currentUser);
+  try{
+       const response1=await Room.findOne({members:userID});
+       var response;
+       if(response1)
+       {
+         response=await Room.findOneAndUpdate({_id:roomID},{$push:{bannedUsers:userID}},{new:true});
+       }
+       if(response){
+        res.status(200).json(response);
+       }
+  }
+  catch(error){
+    res.status(500).json({ error: "Error Banning User" });
+  }
+
+}
 const LeaveRoom = async (req, res) => {
   const Roomid = String(req.query.RoomID.id);
   const user = String(req.query.currentUser);
@@ -160,8 +183,8 @@ const sendInvoice = async (req, res) => {
 };
 
 const generateToken = async (req, res) => {
-  const response = await tokenGenerator();
-  console.log(response);
+  const channel=req.query.channel;
+  const response = await tokenGenerator(channel);
   res.json(response);
 };
 
@@ -170,8 +193,10 @@ module.exports = {
   SearchRoom,
   DeleteExpiredRooms,
   JoinRoom,
+  BanUser,
   LeaveRoom,
   getRoom,
   sendInvoice,
   generateToken,
 };
+
