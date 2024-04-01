@@ -17,7 +17,11 @@ const roomSchema=new mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:User
     }],
-    createdBy:String, 
+    createdBy:{
+        
+        type:mongoose.Schema.Types.ObjectId,
+        ref:User
+    }, 
     isPublic:Boolean,
     isPaid:Boolean,
     price:{ type: Number },
@@ -27,6 +31,9 @@ const roomSchema=new mongoose.Schema({
     moderators:[{
       type:String,
     }],
+    tags:[{
+        type:String,
+    }]
 });
 
 const Room = mongoose.model('room',roomSchema);

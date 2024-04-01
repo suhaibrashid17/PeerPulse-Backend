@@ -19,6 +19,7 @@ const createRoom = async (req, res) => {
       isPublic: req.body.isPublic,
       isPaid: req.body.isPaid,
       price: req.body.price,
+      tags:req.body.tags,
     });
     if(TRoom){
       res.status(200).json(TRoom);
@@ -35,7 +36,10 @@ const SearchRoom = async (req, res) => {
       const searchResult = await Room.find({
         name: { $regex: ".*" + Rooms + ".*" },
         isPublic: true,
-      }); // this is LIKE command in SQL
+      }).populate(
+        "createdBy",
+        "_id image"
+      ); // this is LIKE command in SQL
       if (searchResult) {
         res.status(200).json(searchResult);
       } else {
@@ -46,7 +50,10 @@ const SearchRoom = async (req, res) => {
     }
   } else {
     try {
-      const searchResult = await Room.find({ isPublic: true });
+      const searchResult = await Room.find({ isPublic: true }).populate(
+        "createdBy",
+        "_id image"
+      );
       if (searchResult) {
         res.status(200).json(searchResult);
       } else {
@@ -96,7 +103,7 @@ const JoinRoom = async (req, res) => {
 
     response1 = await Room.findOne({ _id: roomID }).populate(
       "members",
-      "_id email AgoraToken"
+      "_id email image AgoraToken"
     );
     }
     if (response1&&!checkBan&&userAgoraTokenSaved) {
@@ -212,7 +219,7 @@ const getRoom = async (req, res) => {
   try {
     const response = await Room.findOne({ _id: Roomid }).populate(
       "members",
-      "_id email"
+      "_id email image"
     );
     if (response) {
       res.status(200).json(response);
@@ -242,12 +249,47 @@ const sendInvoice = async (req, res) => {
     res.sendStatus(400);
   }
 };
-
+const GetRoomsOfUser=async(req,res)=>{
+   const userID=req.query.user;
+   try{
+    const response=await Room.find({createdBy:userID}).populate(
+      "createdBy",
+      "_id image"
+    );
+    if(response){
+        res.status(200).json(response);
+    }else{
+      res.status(404).json({error:"No room found"});
+    }
+   }catch(error){
+    res.status(500).json({error:"Error Finding Rooms"});
+   }
+}
 const generateToken = async (req, res) => {
   const channel=req.query.channel;
   const response = await tokenGenerator(channel);
   res.json(response);
 };
+
+const SearchSuggestedRooms=async(req,res)=>{
+  const user=req.query.user;
+  try{
+    const foundUser=await User.findOne({_id:user});
+    if(foundUser){
+      const suggestedRooms=await Room.find({tags:{$in:foundUser.interest}}).populate(
+        "createdBy",
+        "_id image"
+      );
+      if(suggestedRooms){
+        res.status(200).json(suggestedRooms);
+      }else{
+        res.status(404).json({error:"No suggestions"});
+      }
+    }
+  }catch(error){
+        res.status(500).json({error:"Error fetching suggested rooms"});
+  }
+}
 
 module.exports = {
   createRoom,
@@ -260,6 +302,8 @@ module.exports = {
   sendInvoice,
   generateToken,
   MakeModerator,
-  RemoveModerator
+  RemoveModerator,
+  GetRoomsOfUser,
+  SearchSuggestedRooms
 };
 
